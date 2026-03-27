@@ -280,6 +280,7 @@ const RiskModule: React.FC<Props> = ({ globalFilter }) => {
                   <div className="chart-card">
                     <div className="chart-title chart-title-inline-logic" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <span className="chart-title-main">总体Vintage趋势</span>
+                      <span style={{ fontWeight: 500 }}>月份类型：</span>
                       <Select
                         value={vintageMonthType}
                         onChange={(value) => setVintageMonthType(value)}
@@ -289,6 +290,7 @@ const RiskModule: React.FC<Props> = ({ globalFilter }) => {
                         ]}
                         style={{ width: 100 }}
                       />
+                      <span style={{ fontWeight: 500 }}>MOB：</span>
                       <Select
                         mode="multiple"
                         options={mobOptions}
@@ -306,6 +308,7 @@ const RiskModule: React.FC<Props> = ({ globalFilter }) => {
                   <div className="chart-card">
                     <div className="chart-title chart-title-inline-logic" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <span className="chart-title-main">总体Vintage</span>
+                      <span style={{ fontWeight: 500 }}>月份类型：</span>
                       <Select
                         value={vintageMonthType}
                         onChange={(value) => setVintageMonthType(value)}
@@ -315,6 +318,7 @@ const RiskModule: React.FC<Props> = ({ globalFilter }) => {
                         ]}
                         style={{ width: 100 }}
                       />
+                      <span style={{ fontWeight: 500 }}>维度筛选：</span>
                       <Cascader
                         options={vintageCascaderOptions}
                         value={vintageCascaderValue}
@@ -357,6 +361,7 @@ const RiskModule: React.FC<Props> = ({ globalFilter }) => {
                   <div className="chart-card">
                     <div className="chart-title chart-title-inline-logic" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <span className="chart-title-main">总体逾期</span>
+                      <span style={{ fontWeight: 500 }}>维度筛选：</span>
                       <Cascader
                         options={vintageCascaderOptions}
                         value={overdueCascaderValue}
