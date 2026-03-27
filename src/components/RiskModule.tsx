@@ -323,8 +323,8 @@ const RiskModule: React.FC<Props> = ({ globalFilter }) => {
                         options={vintageCascaderOptions}
                         value={vintageCascaderValue}
                         onChange={(value) => setVintageCascaderValue(value as [string, string] | undefined)}
-                        placeholder="全部数据（点击❌可清除筛选）"
-                        style={{ minWidth: 240 }}
+                        placeholder="全部数据"
+                        style={{ minWidth: 200 }}
                         expandTrigger="hover"
                         allowClear
                       />
@@ -366,8 +366,8 @@ const RiskModule: React.FC<Props> = ({ globalFilter }) => {
                         options={vintageCascaderOptions}
                         value={overdueCascaderValue}
                         onChange={(value) => setOverdueCascaderValue(value as [string, string] | undefined)}
-                        placeholder="全部数据（点击❌可清除筛选）"
-                        style={{ minWidth: 240 }}
+                        placeholder="全部数据"
+                        style={{ minWidth: 200 }}
                         expandTrigger="hover"
                         allowClear
                       />

@@ -594,7 +594,7 @@ const FinanceModule: React.FC<Props> = ({ globalFilter }) => {
                     <div className="section-title">
                       <Space>
                         资产维度分析
-                        <span style={{ fontWeight: 500 }}>选择资产：</span>
+                        <span style={{ fontWeight: 500 }}>资产类型：</span>
                         <Select
                           mode="multiple"
                           options={assetOptions}
