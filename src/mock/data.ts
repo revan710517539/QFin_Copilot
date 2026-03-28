@@ -144,6 +144,9 @@ export function getBusinessKPIs(filter?: GlobalFilter): KPIItem[] {
     { key: 'balance', name: '在贷余额', value: Math.round(3256000000 * factor), unit: 'amount', momChange: 0.032, yoyChange: 0.145, prevDelta: Math.round(101000000 * factor), group: 'A' },
     { key: 'loanCount', name: '在贷人数', value: Math.round(125832 * factor), unit: 'count', momChange: 0.025, yoyChange: 0.108, prevDelta: Math.round(3072 * factor), group: 'A' },
     { key: 'balanceWeightedRate', name: '余额加权利率', value: 0.1285, unit: 'percent', momChange: -0.008, yoyChange: -0.021, prevDelta: -0.0007, group: 'A' },
+    { key: 'creditCount', name: '授信人数', value: Math.round(89562 * factor), unit: 'count', momChange: 0.015, yoyChange: 0.073, prevDelta: Math.round(1320 * factor), group: 'A' },
+    { key: 'creditAmount', name: '授信金额', value: Math.round(4520000000 * factor), unit: 'amount', momChange: 0.041, yoyChange: 0.168, prevDelta: Math.round(177000000 * factor), group: 'A' },
+    { key: 'creditRate', name: '授信加权利率', value: 0.1356, unit: 'percent', momChange: -0.004, yoyChange: -0.012, prevDelta: -0.0005, group: 'A' },
 
     // B组 - 完件指标
     { key: 'scanRegisterCount', name: '扫码注册人数', value: Math.round(198362 * factor), unit: 'count', momChange: 0.034, yoyChange: 0.158, prevDelta: Math.round(6508 * factor), group: 'B' },
@@ -192,16 +195,7 @@ export function getBusinessSummaryMetrics(type: string = 'cumulative', filter?: 
   const scale = scopeMultiplier[type] ?? 1;
   const adjust = trendAdjust[type] ?? trendAdjust.cumulative;
 
-  const baseMetrics: BusinessSummaryMetric[] = [
-    { key: 'completeCount', name: '完件人数', value: 142365, unit: 'count', momChange: 0.018, yoyChange: 0.082, prevDelta: 2516 },
-    { key: 'creditCount', name: '授信人数', value: 89562, unit: 'count', momChange: 0.015, yoyChange: 0.073, prevDelta: 1320 },
-    { key: 'creditAmount', name: '授信金额', value: 4520000000, unit: 'amount', momChange: 0.041, yoyChange: 0.168, prevDelta: 177000000 },
-    { key: 'creditRate', name: '授信加权利率', value: 0.1356, unit: 'percent', momChange: -0.004, yoyChange: -0.012, prevDelta: -0.0005 },
-    { key: 'drawdownAmount', name: '动支金额', value: 2180000000, unit: 'amount', momChange: 0.027, yoyChange: 0.116, prevDelta: 58600000 },
-    { key: 'drawdownCount', name: '动支人数', value: 45823, unit: 'count', momChange: 0.021, yoyChange: 0.087, prevDelta: 968 },
-    { key: 'loanBalance', name: '在贷余额', value: 3256000000, unit: 'amount', momChange: 0.029, yoyChange: 0.142, prevDelta: 98500000 },
-    { key: 'loanCount', name: '在贷人数', value: 125832, unit: 'count', momChange: 0.023, yoyChange: 0.102, prevDelta: 2865 },
-  ];
+  const baseMetrics: BusinessSummaryMetric[] = [];
 
   return baseMetrics.map((metric) => {
     const scaledValue = metric.unit === 'percent' ? metric.value : Math.max(0, Math.round(metric.value * scale * filterFactor));

@@ -146,31 +146,39 @@ const App: React.FC = () => {
       locale={zhCN}
       theme={{
         token: {
-          colorPrimary: '#22c55e',
-          colorSuccess: '#22c55e',
+          colorPrimary: '#15803d',
+          colorSuccess: '#15803d',
           colorWarning: '#f59e0b',
           colorError: '#dc2626',
-          borderRadius: 12,
-          borderRadiusLG: 14,
-          fontSize: 17,
+          borderRadius: 8,
+          borderRadiusLG: 10,
+          fontSize: 15,
+          colorText: '#0f172a',
+          colorTextSecondary: '#64748b',
+          colorBorder: '#e2e8f0',
+          colorBgContainer: '#ffffff',
+          colorBgElevated: '#ffffff',
+          colorFillAlter: '#f8fafc',
         },
         components: {
           Tabs: {
-            itemActiveColor: '#22c55e',
-            itemHoverColor: '#22c55e',
-            inkBarColor: '#22c55e',
+            itemActiveColor: '#15803d',
+            itemHoverColor: '#15803d',
+            inkBarColor: '#15803d',
+            horizontalItemGutter: 28,
           },
           Table: {
             headerBg: '#f8fafc',
-            rowHoverBg: '#f1fbf5',
-            borderColor: '#e5e7eb',
+            rowHoverBg: '#f8fbf9',
+            borderColor: '#e2e8f0',
+            headerSplitColor: '#e2e8f0',
           },
           Radio: {
-            buttonSolidCheckedBg: '#22c55e',
-            buttonSolidCheckedHoverBg: '#16a34a',
+            buttonSolidCheckedBg: '#15803d',
+            buttonSolidCheckedHoverBg: '#166534',
           },
           Select: {
-            optionSelectedBg: '#ecfdf3',
+            optionSelectedBg: '#f0fdf4',
           },
           Button: {
             primaryShadow: 'none',

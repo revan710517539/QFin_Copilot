@@ -24,20 +24,21 @@ export const chartSeries = [
 ];
 
 export const chartAxis = {
-  axisLine: { lineStyle: { color: '#cbd5e1' } },
+  axisLine: { lineStyle: { color: '#d7e0ea' } },
   axisTick: { show: false },
-  splitLine: { lineStyle: { color: '#ecf0f3' } },
+  splitLine: { lineStyle: { color: '#eef2f6' } },
 };
 
 export const chartLegend = {
-  textStyle: { color: '#475569', fontWeight: 500 },
+  textStyle: { color: '#64748b', fontWeight: 500, fontSize: 12 },
 };
 
 export const chartTooltip = {
-  backgroundColor: 'rgba(15, 23, 42, 0.86)',
-  borderWidth: 0,
-  textStyle: { color: '#f8fafc' },
-  extraCssText: 'backdrop-filter: blur(6px); border-radius: 10px;',
+  backgroundColor: 'rgba(255, 255, 255, 0.98)',
+  borderColor: '#dbe2ea',
+  borderWidth: 1,
+  textStyle: { color: '#334155' },
+  extraCssText: 'border-radius: 8px; box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);',
 };
 
 export const buildXAxisLabelDensity = (total: number, maxVisible: number = 10) => {

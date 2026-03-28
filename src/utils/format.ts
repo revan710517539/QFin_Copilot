@@ -2,7 +2,10 @@
  * 格式化金额：统一万元
  */
 export function formatAmount(value: number): string {
-  return (value / 1e4).toFixed(2) + '万元';
+  return (value / 1e4).toLocaleString('zh-CN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }) + '万元';
 }
 
 /**

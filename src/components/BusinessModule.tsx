@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Radio } from 'antd';
 import ReactECharts from 'echarts-for-react';
-import type { GlobalFilter, TimeFilter, KPIItem, BusinessSummaryMetric } from '../types';
+import type { GlobalFilter, TimeFilter, KPIItem } from '../types';
 import { formatKPI } from '../utils/format';
 import {
   chartPalette,
@@ -9,17 +9,9 @@ import {
   chartAxis,
   chartLegend,
   chartTooltip,
-  areaStyleByColor,
   buildXAxisLabelDensity,
 } from '../utils/chartTheme';
-import {
-  getBusinessKPIs,
-  getBusinessSummaryMetrics,
-  getScaleTrendData,
-  getCompletionTrendData,
-  getCreditStageTrendData,
-  getDrawdownTrendData,
-} from '../mock/data';
+import { getBusinessKPIs, getScaleTrendData, getCompletionTrendData, getCreditStageTrendData, getDrawdownTrendData } from '../mock/data';
 
 interface Props {
   globalFilter: GlobalFilter;
@@ -31,7 +23,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
   const [creditStage, setCreditStage] = useState<'1' | '2' | '3'>('1');
 
   const kpis = useMemo(() => getBusinessKPIs(globalFilter), [globalFilter]);
-  const summaryMetrics = useMemo(() => getBusinessSummaryMetrics(timeFilter.type, globalFilter), [timeFilter.type, globalFilter]);
   const scaleTrend = useMemo(() => getScaleTrendData(timeFilter.type, 30, globalFilter), [timeFilter.type, globalFilter]);
   const completionTrend = useMemo(() => getCompletionTrendData(timeFilter.type, 30, globalFilter), [timeFilter.type, globalFilter]);
   const creditStageTrend = useMemo(() => getCreditStageTrendData(timeFilter.type, 30, globalFilter), [timeFilter.type, globalFilter]);
@@ -67,23 +58,26 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
 
   const drawdownMetricKeys = ['drawdownInitiatedCount', 'drawdownSuccessCount', 'drawdownAmount', 'drawdownWeightedRate'];
   const activeDrawdownMetric = drawdownMetricKeys.includes(activeKPI) ? activeKPI : 'drawdownInitiatedCount';
-  const isWeeklyRange = timeFilter.type === 'week' || timeFilter.type === 'week7';
-  const momTrendLabel = isWeeklyRange ? '周环比' : '月环比';
-  const yoyTrendLabel = isWeeklyRange ? '周同比' : '月同比';
-
-  const formatPrevDeltaByUnit = (value: number, unit: KPIItem['unit']) => {
-    const sign = value >= 0 ? '+' : '-';
+  const formatAbsoluteDeltaByUnit = (value: number, unit: KPIItem['unit']) => {
     const absValue = Math.abs(value);
     if (unit === 'percent') {
-      return `${sign}${(absValue * 100).toFixed(2)}%`;
+      return `${(absValue * 100).toFixed(2)}%`;
     }
     if (unit === 'count') {
-      return `${sign}${Math.round(absValue).toLocaleString()}人`;
+      return `${Math.round(absValue).toLocaleString()}人`;
     }
-    return `${sign}${formatKPI(absValue, 'amount')}`;
+    return formatKPI(absValue, 'amount');
   };
 
-  const formatPrevDelta = (kpi: KPIItem) => formatPrevDeltaByUnit(kpi.prevDelta, kpi.unit);
+  const formatGrowthAbsolute = (currentValue: number, ratio: number, unit: KPIItem['unit']) => {
+    if (Math.abs(1 + ratio) < 1e-9) {
+      return '--';
+    }
+
+    const baseValue = currentValue / (1 + ratio);
+    const delta = currentValue - baseValue;
+    return formatAbsoluteDeltaByUnit(delta, unit);
+  };
 
   const metricFormulaMap: Record<string, string> = {
     newBalance: '统计周期新增余额',
@@ -122,9 +116,25 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
 
   const renderTrendChange = (label: string, value: number) => (
     <span className={`kpi-change ${value >= 0 ? 'up' : 'down'}`}>
-      {label} {value >= 0 ? '↑' : '↓'} {Math.abs(value * 100).toFixed(2)}%
+      <span className="kpi-change-label">{label}</span>
+      <span className="kpi-change-value">
+        {value >= 0 ? '↑' : '↓'} {Math.abs(value * 100).toFixed(2)}%
+      </span>
     </span>
   );
+
+  const renderKpiValue = (kpi: KPIItem) => {
+    if (kpi.key === 'completeCount' && kpi.unit === 'count') {
+      return (
+        <div className="kpi-value-row">
+          <span className="kpi-value-main">{kpi.value.toLocaleString()}</span>
+          <span className="kpi-value-unit">(人)</span>
+        </div>
+      );
+    }
+
+    return <div className="kpi-value">{formatKPI(kpi.value, kpi.unit)}</div>;
+  };
 
   const renderKpiCard = (kpi: KPIItem) => {
     const isActive = activeKPI === kpi.key;
@@ -135,38 +145,26 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
         onClick={() => setActiveKPI(kpi.key)}
       >
         <div className="kpi-name">{kpi.name}</div>
-        <div className="kpi-value">{formatKPI(kpi.value, kpi.unit)}</div>
+        {renderKpiValue(kpi)}
         <div className="kpi-meta-row">
-          {renderTrendChange(yoyTrendLabel, kpi.yoyChange)}
-          {renderTrendChange(momTrendLabel, kpi.momChange)}
-          <span className={`kpi-delta ${kpi.prevDelta >= 0 ? 'up' : 'down'}`}>
-            较上期 {formatPrevDelta(kpi)}
-          </span>
+          <div className="kpi-meta-line">
+            {renderTrendChange('月同比', kpi.yoyChange)}
+            <span className={`kpi-delta ${kpi.yoyChange >= 0 ? 'up' : 'down'}`}>
+              <span className="kpi-change-label">月同比增长</span>
+              <span className="kpi-change-value">{formatGrowthAbsolute(kpi.value, kpi.yoyChange, kpi.unit)}</span>
+            </span>
+          </div>
+          <div className="kpi-meta-line">
+            {renderTrendChange('周环比', kpi.momChange)}
+            <span className={`kpi-delta ${kpi.momChange >= 0 ? 'up' : 'down'}`}>
+              <span className="kpi-change-label">周环比增长</span>
+              <span className="kpi-change-value">{formatGrowthAbsolute(kpi.value, kpi.momChange, kpi.unit)}</span>
+            </span>
+          </div>
         </div>
       </div>
     );
   };
-
-  const renderSummarySection = () => (
-    <div className="summary-metrics-section">
-      <div className="summary-metrics-title">核心经营指标</div>
-      <div className="summary-kpi-grid">
-        {summaryMetrics.map((metric: BusinessSummaryMetric) => (
-          <div key={metric.key} className="summary-kpi-card">
-            <div className="summary-kpi-name">{metric.name}</div>
-            <div className="summary-kpi-value">{formatKPI(metric.value, metric.unit)}</div>
-            <div className="summary-kpi-meta-row">
-              {renderTrendChange(yoyTrendLabel, metric.yoyChange)}
-              {renderTrendChange(momTrendLabel, metric.momChange)}
-              <span className={`summary-kpi-delta ${metric.prevDelta >= 0 ? 'up' : 'down'}`}>
-                较上期 {formatPrevDeltaByUnit(metric.prevDelta, metric.unit)}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
 
   const completionKpis = kpis.filter((k) => k.group === 'B');
   const creditStageKpis = kpis.filter((k) => k.group === 'C' && visibleCreditMetricKeys.includes(k.key));
@@ -203,8 +201,8 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       return [
         `${point.axisValue}`,
         `${point.marker} ${point.seriesName}: ${valueFormatter(currentValue)}`,
-        `${momTrendLabel}: ${formatChangePercent(currentValue, momBase)}`,
-        `${yoyTrendLabel}: ${formatChangePercent(currentValue, yoyBase)}`,
+        `周环比: ${formatChangePercent(currentValue, momBase)}`,
+        `月同比: ${formatChangePercent(currentValue, yoyBase)}`,
       ].join('<br/>');
     };
   };
@@ -212,7 +210,7 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
   // ============ 按组渲染 KPI 和图表 ============
   const renderGroupA = () => (
     <>
-      <div className="chart-section-title">余额指标</div>
+      <div className="chart-section-title">核心经营指标</div>
       <div className="group-section">
         <div className="kpi-area">
           <div className="kpi-grid">{kpis.filter((k) => k.group === 'A').map(renderKpiCard)}</div>
@@ -304,7 +302,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
     color: string;
     data: number[];
     formatter: (value: number) => string;
-    withArea?: boolean;
   }> = {
     newBalance: {
       title: '新增余额趋势',
@@ -313,7 +310,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       color: chartPalette.green700,
       data: scaleTrend.newBalance,
       formatter: (v) => `${Math.round(v * 10000).toLocaleString()}`,
-      withArea: true,
     },
     balance: {
       title: '在贷余额趋势',
@@ -322,7 +318,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       color: chartPalette.green400,
       data: scaleTrend.balance,
       formatter: (v) => `${Math.round(v * 10000).toLocaleString()}`,
-      withArea: true,
     },
     loanCount: {
       title: '在贷人数趋势',
@@ -331,7 +326,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       color: chartPalette.mint500,
       data: scaleTrend.loanCount,
       formatter: (v) => `${v}`,
-      withArea: true,
     },
     balanceWeightedRate: {
       title: '余额加权利率趋势',
@@ -377,7 +371,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
         itemStyle: {
           color: selectedScaleMetric.color,
         },
-        areaStyle: selectedScaleMetric.withArea ? areaStyleByColor(selectedScaleMetric.color) : undefined,
         lineStyle: { width: 2 },
         showSymbol: false,
       },
@@ -392,7 +385,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
     color: string;
     data: number[];
     formatter: (value: number) => string;
-    withArea?: boolean;
   }> = {
     scanRegisterCount: {
       title: '扫码注册人数趋势',
@@ -401,7 +393,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       color: chartPalette.green700,
       data: completionTrend.scanRegisterCount,
       formatter: (v) => `${v}`,
-      withArea: true,
     },
     realNameCompletedCount: {
       title: '实名完成人数趋势',
@@ -410,7 +401,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       color: chartPalette.green600,
       data: completionTrend.realNameCompletedCount,
       formatter: (v) => `${v}`,
-      withArea: true,
     },
     completeCount: {
       title: '完件人数趋势',
@@ -419,7 +409,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       color: chartPalette.green400,
       data: completionTrend.completeCount,
       formatter: (v) => `${v}`,
-      withArea: true,
     },
   };
   const selectedCompletionMetric = completionMetricConfig[activeCompletionMetric];
@@ -456,7 +445,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
         itemStyle: {
           color: selectedCompletionMetric.color,
         },
-        areaStyle: selectedCompletionMetric.withArea ? areaStyleByColor(selectedCompletionMetric.color) : undefined,
         lineStyle: { width: 2 },
         showSymbol: false,
       },
@@ -471,7 +459,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
     color: string;
     data: number[];
     formatter: (value: number) => string;
-    withArea?: boolean;
   }> = {
     stage1CreditSuccessCount: {
       title: '1段授信成功人数趋势',
@@ -480,7 +467,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       color: chartPalette.green700,
       data: creditStageTrend.stage1Count,
       formatter: (v) => `${v}`,
-      withArea: true,
     },
     stage1CreditSuccessAmount: {
       title: '1段授信成功金额趋势',
@@ -489,7 +475,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       color: chartPalette.green400,
       data: creditStageTrend.stage1Amount,
       formatter: (v) => `${Math.round(v * 10000).toLocaleString()}`,
-      withArea: true,
     },
     stage1CreditWeightedRate: {
       title: '1段授信加权利率趋势',
@@ -507,7 +492,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       color: chartPalette.green700,
       data: creditStageTrend.stage2Count,
       formatter: (v) => `${v}`,
-      withArea: true,
     },
     stage2CreditSuccessAmount: {
       title: '2段授信成功金额趋势',
@@ -516,7 +500,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       color: chartPalette.green400,
       data: creditStageTrend.stage2Amount,
       formatter: (v) => `${Math.round(v * 10000).toLocaleString()}`,
-      withArea: true,
     },
     stage2CreditWeightedRate: {
       title: '2段授信加权利率趋势',
@@ -534,7 +517,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       color: chartPalette.green700,
       data: creditStageTrend.stage3Count,
       formatter: (v) => `${v}`,
-      withArea: true,
     },
     stage3CreditSuccessAmount: {
       title: '3段授信成功金额趋势',
@@ -543,7 +525,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       color: chartPalette.green400,
       data: creditStageTrend.stage3Amount,
       formatter: (v) => `${Math.round(v * 10000).toLocaleString()}`,
-      withArea: true,
     },
     stage3CreditWeightedRate: {
       title: '3段授信加权利率趋势',
@@ -588,7 +569,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
         itemStyle: {
           color: selectedCreditMetric.color,
         },
-        areaStyle: selectedCreditMetric.withArea ? areaStyleByColor(selectedCreditMetric.color) : undefined,
         lineStyle: { width: 2 },
         showSymbol: false,
       },
@@ -603,7 +583,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
     color: string;
     data: number[];
     formatter: (value: number) => string;
-    withArea?: boolean;
   }> = {
     drawdownInitiatedCount: {
       title: '发起动支人数趋势',
@@ -612,7 +591,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       color: chartPalette.green700,
       data: drawdownTrend.initiatedCount,
       formatter: (v) => `${v}`,
-      withArea: true,
     },
     drawdownSuccessCount: {
       title: '动支成功人数趋势',
@@ -621,7 +599,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       color: chartPalette.green600,
       data: drawdownTrend.successCount,
       formatter: (v) => `${v}`,
-      withArea: true,
     },
     drawdownAmount: {
       title: '动支金额趋势',
@@ -630,7 +607,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       color: chartPalette.green400,
       data: drawdownTrend.amount,
       formatter: (v) => `${Math.round(v * 10000).toLocaleString()}`,
-      withArea: true,
     },
     drawdownWeightedRate: {
       title: '动支加权利率趋势',
@@ -675,7 +651,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
         itemStyle: {
           color: selectedDrawdownMetric.color,
         },
-        areaStyle: selectedDrawdownMetric.withArea ? areaStyleByColor(selectedDrawdownMetric.color) : undefined,
         lineStyle: { width: 2 },
         showSymbol: false,
       },
@@ -701,8 +676,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
           <Radio.Button value="week">本周</Radio.Button>
         </Radio.Group>
       </div>
-
-      {renderSummarySection()}
 
       {/* 各分组 KPI + 图表 */}
       {renderGroupA()}
