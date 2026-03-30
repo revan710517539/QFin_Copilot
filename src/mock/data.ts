@@ -10,6 +10,8 @@ import {
   AssetDetail,
   GlobalFilter,
 } from '../types';
+import { riskDimensionBuckets } from '../constants/risk';
+import type { RiskDimension } from '../constants/risk';
 import { randomInRange, generateTimeSeries, generateMonthLabels, generateDayLabels } from '../utils/format';
 
 export { generateMonthLabels };
@@ -636,7 +638,7 @@ export function getOverdueTrendData() {
 
 export function getRiskDrilldownData(
   loanMonth: string,
-  dimension: 'creditRange' | 'pricingRange' | 'repayment',
+  dimension: RiskDimension,
   monthType: 'natural' | 'loan' = 'loan'
 ): RiskDrilldownRow[] {
   const monthIndex = Math.max(1, Math.min(12, Number.parseInt(loanMonth.replace('月', ''), 10) || 1));
@@ -645,13 +647,7 @@ export function getRiskDrilldownData(
   // 自然月和放款月的差异因子
   const monthTypeFactor = monthType === 'natural' ? 1.12 : 1;
 
-  const bucketMap: Record<'creditRange' | 'pricingRange' | 'repayment', string[]> = {
-    creditRange: ['0-20万', '20-40万', '40-80万', '80万+'],
-    pricingRange: ['0-12%', '12-18%', '18-24%', '24%+'],
-    repayment: ['等额本息', '先息后本', '随借随还', '一次性还本'],
-  };
-
-  return bucketMap[dimension].map((bucket, index) => {
+  return riskDimensionBuckets[dimension].map((bucket, index) => {
     const bucketFactor = 1 - index * 0.12;
     const loanAmount = randomInRange(0.35, 1.2) * 1e8 * monthFactor * bucketFactor * monthTypeFactor;
     const balance = loanAmount * randomInRange(1.12, 1.36);
@@ -692,7 +688,7 @@ export function getRiskDrilldownData(
 
 export function getRiskDrilldownVintageData(
   loanMonth: string,
-  dimension: 'creditRange' | 'pricingRange' | 'repayment',
+  dimension: RiskDimension,
   monthType: 'natural' | 'loan' = 'loan'
 ): RiskDrilldownVintageRow[] {
   const monthIndex = Math.max(1, Math.min(12, Number.parseInt(loanMonth.replace('月', ''), 10) || 1));
@@ -701,13 +697,7 @@ export function getRiskDrilldownVintageData(
   // 自然月和放款月的差异因子
   const monthTypeFactor = monthType === 'natural' ? 1.08 : 1;
 
-  const bucketMap: Record<'creditRange' | 'pricingRange' | 'repayment', string[]> = {
-    creditRange: ['0-20万', '20-40万', '40-80万', '80万+'],
-    pricingRange: ['0-12%', '12-18%', '18-24%', '24%+'],
-    repayment: ['等额本息', '先息后本', '随借随还', '一次性还本'],
-  };
-
-  return bucketMap[dimension].map((bucket, index) => {
+  return riskDimensionBuckets[dimension].map((bucket, index) => {
     const row: RiskDrilldownVintageRow = {
       key: `vintage-${loanMonth}-${dimension}-${index}`,
       loanMonth,

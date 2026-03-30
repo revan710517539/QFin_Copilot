@@ -5,6 +5,8 @@ import type { ColumnsType } from 'antd/es/table';
 import type { GlobalFilter, RiskDetailRow } from '../types';
 import { formatPercent, formatWan } from '../utils/format';
 import { buildXAxisLabelDensity, chartSeries, vintageRateColor } from '../utils/chartTheme';
+import { riskDimensionOptions } from '../constants/risk';
+import type { RiskDimension } from '../constants/risk';
 import { getRiskDetailData, getRiskDrilldownData, getRiskDrilldownVintageData, getVintageData } from '../mock/data';
 
 interface Props {
@@ -14,8 +16,8 @@ interface Props {
 const RiskModule: React.FC<Props> = ({ globalFilter }) => {
   const [selectedLoanMonth, setSelectedLoanMonth] = useState<string>('1月');
   const [selectedVintageMobs, setSelectedVintageMobs] = useState<number[]>([3, 6, 9]);
-  const [vintageCascaderValue, setVintageCascaderValue] = useState<[string, string] | undefined>(undefined);
-  const [overdueCascaderValue, setOverdueCascaderValue] = useState<[string, string] | undefined>(undefined);
+  const [vintageCascaderValue, setVintageCascaderValue] = useState<[RiskDimension, string] | undefined>(undefined);
+  const [overdueCascaderValue, setOverdueCascaderValue] = useState<[RiskDimension, string] | undefined>(undefined);
   const [vintageMonthType, setVintageMonthType] = useState<'natural' | 'loan'>('loan');
 
   const vintageData = useMemo(() => getVintageData(globalFilter, vintageMonthType), [globalFilter, vintageMonthType]);
@@ -101,43 +103,10 @@ const RiskModule: React.FC<Props> = ({ globalFilter }) => {
     },
   ];
 
-  const vintageCascaderOptions = [
-    {
-      value: 'creditRange',
-      label: '额度',
-      children: [
-        { value: '0-20万', label: '0-20万' },
-        { value: '20-40万', label: '20-40万' },
-        { value: '40-80万', label: '40-80万' },
-        { value: '80万+', label: '80万+' },
-      ],
-    },
-    {
-      value: 'pricingRange',
-      label: '定价',
-      children: [
-        { value: '0-12%', label: '0-12%' },
-        { value: '12-18%', label: '12-18%' },
-        { value: '18-24%', label: '18-24%' },
-        { value: '24%+', label: '24%+' },
-      ],
-    },
-    {
-      value: 'repayment',
-      label: '还款方式',
-      children: [
-        { value: '等额本息', label: '等额本息' },
-        { value: '先息后本', label: '先息后本' },
-        { value: '随借随还', label: '随借随还' },
-        { value: '一次性还本', label: '一次性还本' },
-      ],
-    },
-  ];
-
-  const vintageDimension = vintageCascaderValue?.[0] as 'creditRange' | 'pricingRange' | 'repayment' | undefined;
+  const vintageDimension = vintageCascaderValue?.[0];
   const selectedBucket = vintageCascaderValue?.[1];
 
-  const overdueDimension = overdueCascaderValue?.[0] as 'creditRange' | 'pricingRange' | 'repayment' | undefined;
+  const overdueDimension = overdueCascaderValue?.[0];
   const selectedOverdueBucket = overdueCascaderValue?.[1];
 
   // 获取所有月份的vintage数据，按选中的维度和bucket筛选
@@ -323,9 +292,9 @@ const RiskModule: React.FC<Props> = ({ globalFilter }) => {
                       />
                       <span style={{ fontWeight: 500 }}>维度筛选：</span>
                       <Cascader
-                        options={vintageCascaderOptions}
+                        options={riskDimensionOptions}
                         value={vintageCascaderValue}
-                        onChange={(value) => setVintageCascaderValue(value as [string, string] | undefined)}
+                        onChange={(value) => setVintageCascaderValue(value as [RiskDimension, string] | undefined)}
                         placeholder="全部数据"
                         style={{ minWidth: 200 }}
                         expandTrigger="hover"
@@ -366,9 +335,9 @@ const RiskModule: React.FC<Props> = ({ globalFilter }) => {
                       <span className="chart-title-main">总体逾期</span>
                       <span style={{ fontWeight: 500 }}>维度筛选：</span>
                       <Cascader
-                        options={vintageCascaderOptions}
+                        options={riskDimensionOptions}
                         value={overdueCascaderValue}
-                        onChange={(value) => setOverdueCascaderValue(value as [string, string] | undefined)}
+                        onChange={(value) => setOverdueCascaderValue(value as [RiskDimension, string] | undefined)}
                         placeholder="全部数据"
                         style={{ minWidth: 200 }}
                         expandTrigger="hover"

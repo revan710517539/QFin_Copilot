@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Select, Space, Table, Tabs } from 'antd';
 import ReactECharts from 'echarts-for-react';
 import type { ColumnsType } from 'antd/es/table';
 import type { AssetDetail, FinancialMonthly, GlobalFilter } from '../types';
-import { formatAmount, formatPercent, formatWan } from '../utils/format';
+import { formatPercent, formatWan } from '../utils/format';
 import {
   areaStyleByColor,
   chartAxis,
@@ -32,10 +32,25 @@ const assetOptions = [
   { label: '资产D', value: '资产D' },
 ];
 
+const assetMetricRows: Array<{ key: string; metric: string; getValue: (row: AssetDetail) => string }> = [
+  { key: 'loanAmount', metric: '放款金额(万元)', getValue: (row) => formatWan(row.loanAmount) },
+  { key: 'takeRate', metric: 'Take Rate', getValue: (row) => formatPercent(row.takeRate) },
+  { key: 'profitIncome', metric: '分润收入(万元)', getValue: (row) => formatWan(row.profitIncome) },
+  { key: 'balance', metric: '在贷余额(万元)', getValue: (row) => formatWan(row.balance) },
+  { key: 'rateRange', metric: '利率区间', getValue: (row) => row.rateRange },
+  { key: 'actualInterest', metric: '实收息费(万元)', getValue: (row) => formatWan(row.actualInterest) },
+  { key: 'annualRiskLoss', metric: '年化风险损失率', getValue: (row) => formatPercent(row.annualRiskLoss) },
+  { key: 'techDiscount', metric: '技术服务费折扣率', getValue: (row) => formatPercent(row.techDiscount) },
+  { key: 'profitRatio', metric: '分润比例', getValue: (row) => formatPercent(row.profitRatio) },
+];
+
+const assetCellMeta: Partial<Record<string, { pricing: string; discount: string }>> = {
+  资产A: { pricing: '0.75', discount: '89%' },
+};
+
 const FinanceModule: React.FC<Props> = ({ globalFilter }) => {
   const [fy, setFy] = useState('FY2025');
   const [selectedAssets, setSelectedAssets] = useState<string[]>([assetOptions[0].value]);
-  const [assetTrendTarget, setAssetTrendTarget] = useState<string>(assetOptions[0].value);
 
   const monthlyData = useMemo(() => getFinancialMonthlyData(globalFilter), [globalFilter]);
   const assetData = useMemo(() => getAssetDetailData(globalFilter), [globalFilter]);
@@ -44,12 +59,6 @@ const FinanceModule: React.FC<Props> = ({ globalFilter }) => {
     () => assetData.filter((d) => selectedAssets.includes(d.assetName)),
     [assetData, selectedAssets]
   );
-
-  useEffect(() => {
-    if (!selectedAssets.includes(assetTrendTarget)) {
-      setAssetTrendTarget(selectedAssets[0] ?? assetOptions[0].value);
-    }
-  }, [selectedAssets, assetTrendTarget]);
 
   type AssetPivotRow = {
     key: string;
@@ -64,18 +73,6 @@ const FinanceModule: React.FC<Props> = ({ globalFilter }) => {
     return keys.sort((a, b) => Number(a.replace('M', '')) - Number(b.replace('M', '')));
   }, [filteredAssetData]);
 
-  const metricRows: Array<{ key: string; metric: string; getValue: (row: AssetDetail) => string }> = [
-    { key: 'loanAmount', metric: '放款金额(万元)', getValue: (row) => formatWan(row.loanAmount) },
-    { key: 'balance', metric: '在贷余额(万元)', getValue: (row) => formatWan(row.balance) },
-    { key: 'rateRange', metric: '利率区间', getValue: (row) => row.rateRange },
-    { key: 'actualInterest', metric: '实收息费(万元)', getValue: (row) => formatWan(row.actualInterest) },
-    { key: 'annualRiskLoss', metric: '年化风险损失率', getValue: (row) => formatPercent(row.annualRiskLoss) },
-    { key: 'techDiscount', metric: '技术服务费折扣率', getValue: (row) => formatPercent(row.techDiscount) },
-    { key: 'profitRatio', metric: '分润比例', getValue: (row) => formatPercent(row.profitRatio) },
-    { key: 'profitIncome', metric: '分润收入(万元)', getValue: (row) => formatWan(row.profitIncome) },
-    { key: 'takeRate', metric: 'Take Rate', getValue: (row) => formatPercent(row.takeRate) },
-  ];
-
   const assetPivotData = useMemo(() => {
     const assetMonthMap = new Map<string, Map<string, AssetDetail>>();
     filteredAssetData.forEach((row) => {
@@ -89,12 +86,12 @@ const FinanceModule: React.FC<Props> = ({ globalFilter }) => {
       const monthMap = assetMonthMap.get(assetName);
       if (!monthMap) return;
 
-      metricRows.forEach((metricRow, metricIndex) => {
+      assetMetricRows.forEach((metricRow, metricIndex) => {
         const row: AssetPivotRow = {
           key: `${assetName}-${metricRow.key}`,
           assetName,
           metric: metricRow.metric,
-          rowSpan: metricIndex === 0 ? metricRows.length : 0,
+          rowSpan: metricIndex === 0 ? assetMetricRows.length : 0,
         };
 
         monthKeys.forEach((month) => {
@@ -107,7 +104,7 @@ const FinanceModule: React.FC<Props> = ({ globalFilter }) => {
     });
 
     return rows;
-  }, [filteredAssetData, selectedAssets, monthKeys, metricRows]);
+  }, [filteredAssetData, selectedAssets, monthKeys]);
 
   const assetPivotColumns: ColumnsType<AssetPivotRow> = useMemo(
     () => [
@@ -115,9 +112,23 @@ const FinanceModule: React.FC<Props> = ({ globalFilter }) => {
         title: '资产',
         dataIndex: 'assetName',
         key: 'assetName',
-        width: 110,
+        width: 136,
         fixed: 'left',
-        render: (_, record) => <span>{record.assetName}</span>,
+        render: (_, record) => {
+          const meta = assetCellMeta[record.assetName];
+
+          return (
+            <div className="asset-cell">
+              <div className="asset-cell-name">{record.assetName}</div>
+              {meta && (
+                <div className="asset-cell-meta">
+                  <div>定价：{meta.pricing}</div>
+                  <div>折扣率：{meta.discount}</div>
+                </div>
+              )}
+            </div>
+          );
+        },
         onCell: (record) => ({ rowSpan: record.rowSpan }),
       },
       { title: '指标', dataIndex: 'metric', key: 'metric', width: 180, fixed: 'left' },
@@ -636,6 +647,9 @@ const FinanceModule: React.FC<Props> = ({ globalFilter }) => {
                   </div>
 
                   <div className="finance-detail-table">
+                    <div className="finance-detail-note">
+                      注：放款金额 * Take Rate = 定价 * 折扣率（风险表现） = 分润收入
+                    </div>
                     <Table
                       columns={assetPivotColumns}
                       dataSource={assetPivotData}
