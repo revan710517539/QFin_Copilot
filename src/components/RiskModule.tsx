@@ -3,7 +3,7 @@ import { Table, Tabs, Cascader, Select } from 'antd';
 import ReactECharts from 'echarts-for-react';
 import type { ColumnsType } from 'antd/es/table';
 import type { GlobalFilter, RiskDetailRow } from '../types';
-import { formatPercent } from '../utils/format';
+import { formatPercent, formatWan } from '../utils/format';
 import { buildXAxisLabelDensity, chartSeries, vintageRateColor } from '../utils/chartTheme';
 import { getRiskDetailData, getRiskDrilldownData, getRiskDrilldownVintageData, getVintageData } from '../mock/data';
 
@@ -26,6 +26,7 @@ const RiskModule: React.FC<Props> = ({ globalFilter }) => {
     () =>
       Array.from(new Set(vintageData.map((item) => item.mob)))
         .sort((a, b) => a - b)
+        .filter((mob) => mob > 0)
         .map((mob) => ({ label: `MOB${mob}`, value: mob })),
     [vintageData]
   );
@@ -55,27 +56,29 @@ const RiskModule: React.FC<Props> = ({ globalFilter }) => {
 
   const mobColumns = [
     { title: '月份', dataIndex: 'cohort', key: 'cohort', fixed: 'left' as const, width: 100 },
-    { title: '放款金额（万元）', dataIndex: 'loanAmount', key: 'loanAmount', width: 120, render: (v: number) => v ? (v / 1e4).toFixed(2) : '-' },
-    ...Array.from({ length: 13 }, (_, index) => ({
-      title: `MOB${index}`,
-      dataIndex: `mob${index}`,
-      key: `mob${index}`,
+    { title: '放款金额（万元）', dataIndex: 'loanAmount', key: 'loanAmount', width: 120, render: (v: number) => v ? formatWan(v) : '-' },
+    ...Array.from({ length: 12 }, (_, index) => {
+      const mob = index + 1;
+      return {
+      title: `MOB${mob}`,
+      dataIndex: `mob${mob}`,
+      key: `mob${mob}`,
       width: 80,
       render: (value: number) => (value ? <span style={{ color: vintageRateColor(value), fontWeight: 600 }}>{(value * 100).toFixed(2)}%</span> : '-'),
-    })),
+    };}),
   ];
 
   const detailColumns: ColumnsType<RiskDetailRow> = [
     { title: '放款月', dataIndex: 'period', key: 'period', fixed: 'left', width: 72, sorter: (a, b) => a.period.localeCompare(b.period) },
-    { title: '放款金额（万元）', dataIndex: 'loanAmount', key: 'loanAmount', width: 110, render: (v) => (v / 1e4).toFixed(2), sorter: (a, b) => a.loanAmount - b.loanAmount },
-    { title: '在贷余额（万元）', dataIndex: 'balance', key: 'balance', width: 110, render: (v) => (v / 1e4).toFixed(2), sorter: (a, b) => a.balance - b.balance },
+    { title: '放款金额（万元）', dataIndex: 'loanAmount', key: 'loanAmount', width: 110, render: (v) => formatWan(v), sorter: (a, b) => a.loanAmount - b.loanAmount },
+    { title: '在贷余额（万元）', dataIndex: 'balance', key: 'balance', width: 110, render: (v) => formatWan(v), sorter: (a, b) => a.balance - b.balance },
     { title: '在贷人数', dataIndex: 'loanCount', key: 'loanCount', width: 76, render: (v) => v.toLocaleString(), sorter: (a, b) => a.loanCount - b.loanCount },
-    { title: '平均额度（万元）', dataIndex: 'avgCredit', key: 'avgCredit', width: 110, render: (v) => (v / 1e4).toFixed(2), sorter: (a, b) => a.avgCredit - b.avgCredit },
+    { title: '平均额度（万元）', dataIndex: 'avgCredit', key: 'avgCredit', width: 110, render: (v) => formatWan(v), sorter: (a, b) => a.avgCredit - b.avgCredit },
     { title: '平均定价', dataIndex: 'avgPricing', key: 'avgPricing', width: 76, render: (v) => formatPercent(v), sorter: (a, b) => a.avgPricing - b.avgPricing },
     {
       title: '3D+ 逾期',
       children: [
-        { title: '逾期本金（万元）', dataIndex: 'dpd3Principal', key: 'dpd3Principal', width: 110, render: (v) => (v / 1e4).toFixed(2) },
+        { title: '逾期本金（万元）', dataIndex: 'dpd3Principal', key: 'dpd3Principal', width: 110, render: (v) => formatWan(v) },
         { title: '逾期率', dataIndex: 'dpd3Rate', key: 'dpd3Rate', width: 72, render: (v) => formatPercent(v) },
         { title: '逾期人数', dataIndex: 'dpd3Count', key: 'dpd3Count', width: 72 },
       ],
@@ -83,7 +86,7 @@ const RiskModule: React.FC<Props> = ({ globalFilter }) => {
     {
       title: '30D+ 逾期',
       children: [
-        { title: '逾期本金（万元）', dataIndex: 'dpd30Principal', key: 'dpd30Principal', width: 110, render: (v) => (v / 1e4).toFixed(2) },
+        { title: '逾期本金（万元）', dataIndex: 'dpd30Principal', key: 'dpd30Principal', width: 110, render: (v) => formatWan(v) },
         { title: '逾期率', dataIndex: 'dpd30Rate', key: 'dpd30Rate', width: 72, render: (v) => formatPercent(v) },
         { title: '逾期人数', dataIndex: 'dpd30Count', key: 'dpd30Count', width: 72 },
       ],
@@ -91,7 +94,7 @@ const RiskModule: React.FC<Props> = ({ globalFilter }) => {
     {
       title: '不良',
       children: [
-        { title: '90D+逾期本金（万元）', dataIndex: 'dpd90Principal', key: 'dpd90Principal', width: 130, render: (v) => (v / 1e4).toFixed(2) },
+        { title: '90D+逾期本金（万元）', dataIndex: 'dpd90Principal', key: 'dpd90Principal', width: 130, render: (v) => formatWan(v) },
         { title: '逾期率', dataIndex: 'dpd90Rate', key: 'dpd90Rate', width: 72, render: (v) => formatPercent(v) },
         { title: '逾期人数', dataIndex: 'dpd90Count', key: 'dpd90Count', width: 72 },
       ],
@@ -305,7 +308,7 @@ const RiskModule: React.FC<Props> = ({ globalFilter }) => {
                 </div>
 
                 <div className="risk-main risk-main-compact">
-                  <div className="chart-card">
+                  <div className="chart-card risk-table-card">
                     <div className="chart-title chart-title-inline-logic" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <span className="chart-title-main">总体Vintage</span>
                       <span style={{ fontWeight: 500 }}>月份类型：</span>
@@ -358,7 +361,7 @@ const RiskModule: React.FC<Props> = ({ globalFilter }) => {
                 </div>
 
                 <div className="risk-main risk-main-compact">
-                  <div className="chart-card">
+                  <div className="chart-card risk-table-card">
                     <div className="chart-title chart-title-inline-logic" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <span className="chart-title-main">总体逾期</span>
                       <span style={{ fontWeight: 500 }}>维度筛选：</span>

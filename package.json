@@ -2,6 +2,7 @@
   "name": "credit-dashboard",
   "version": "1.0.0",
   "private": true,
+  "main": "build/electron.js",
   "dependencies": {
     "@ant-design/icons": "^5.3.0",
     "ajv": "^8.18.0",
@@ -20,13 +21,38 @@
   "devDependencies": {
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "electron": "^37.2.6",
+    "electron-builder": "^26.0.12",
     "schema-utils": "^3.3.0"
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "PUBLIC_URL=. react-scripts build",
+    "electron": "electron electron/main.js",
+    "dist:mac": "npm run build && electron-builder --mac dmg",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
+  },
+  "build": {
+    "appId": "com.revan.creditdashboard",
+    "productName": "Credit Dashboard",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "build/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.finance"
+    },
+    "dmg": {
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    }
   },
   "eslintConfig": {
     "extends": [

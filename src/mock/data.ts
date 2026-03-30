@@ -147,11 +147,12 @@ export function getBusinessKPIs(filter?: GlobalFilter): KPIItem[] {
     { key: 'creditCount', name: '授信人数', value: Math.round(89562 * factor), unit: 'count', momChange: 0.015, yoyChange: 0.073, prevDelta: Math.round(1320 * factor), group: 'A' },
     { key: 'creditAmount', name: '授信金额', value: Math.round(4520000000 * factor), unit: 'amount', momChange: 0.041, yoyChange: 0.168, prevDelta: Math.round(177000000 * factor), group: 'A' },
     { key: 'creditRate', name: '授信加权利率', value: 0.1356, unit: 'percent', momChange: -0.004, yoyChange: -0.012, prevDelta: -0.0005, group: 'A' },
+    { key: 'coreCompleteRate', name: '完件率', value: 0.8421, unit: 'percent', momChange: 0.009, yoyChange: 0.024, prevDelta: 0.004, group: 'A' },
 
     // B组 - 完件指标
     { key: 'scanRegisterCount', name: '扫码注册人数', value: Math.round(198362 * factor), unit: 'count', momChange: 0.034, yoyChange: 0.158, prevDelta: Math.round(6508 * factor), group: 'B' },
-    { key: 'realNameCompletedCount', name: '实名完成人数', value: Math.round(168925 * factor), unit: 'count', momChange: 0.027, yoyChange: 0.121, prevDelta: Math.round(4462 * factor), group: 'B' },
     { key: 'completeCount', name: '完件人数', value: Math.round(142365 * factor), unit: 'count', momChange: 0.018, yoyChange: 0.082, prevDelta: Math.round(2516 * factor), group: 'B' },
+    { key: 'completeRate', name: '完件率', value: 0.8421, unit: 'percent', momChange: 0.009, yoyChange: 0.024, prevDelta: 0.004, group: 'B' },
 
     // C组 - 授信指标（1/2/3段）
     { key: 'stage1CreditSuccessCount', name: '1段授信成功人数', value: Math.round(89562 * factor), unit: 'count', momChange: 0.018, yoyChange: 0.083, prevDelta: Math.round(1586 * factor), group: 'C' },
@@ -169,6 +170,10 @@ export function getBusinessKPIs(filter?: GlobalFilter): KPIItem[] {
     { key: 'drawdownSuccessCount', name: '动支成功人数', value: Math.round(45823 * factor), unit: 'count', momChange: 0.028, yoyChange: 0.091, prevDelta: Math.round(1245 * factor), group: 'D' },
     { key: 'drawdownAmount', name: '动支金额', value: Math.round(2180000000 * factor), unit: 'amount', momChange: 0.028, yoyChange: 0.124, prevDelta: Math.round(59500000 * factor), group: 'D' },
     { key: 'drawdownWeightedRate', name: '动支加权利率', value: 0.1312, unit: 'percent', momChange: -0.002, yoyChange: -0.01, prevDelta: -0.0002, group: 'D' },
+    { key: 'drawdownT1Rate', name: 'T1动支率', value: 0.241, unit: 'percent', momChange: 0.011, yoyChange: 0.036, prevDelta: 0.0026, group: 'D' },
+    { key: 'drawdownT3Rate', name: 'T3动支率', value: 0.158, unit: 'percent', momChange: 0.008, yoyChange: 0.028, prevDelta: 0.0019, group: 'D' },
+    { key: 'drawdownT7Rate', name: 'T7动支率', value: 0.093, unit: 'percent', momChange: 0.006, yoyChange: 0.021, prevDelta: 0.0013, group: 'D' },
+    { key: 'drawdownT15Rate', name: 'T15动支率', value: 0.061, unit: 'percent', momChange: 0.004, yoyChange: 0.015, prevDelta: 0.0009, group: 'D' },
   ];
 }
 

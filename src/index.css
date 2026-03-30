@@ -155,7 +155,7 @@ body {
   gap: 12px;
   padding: 10px 12px;
   margin: -4px 0 14px;
-  border: 1px solid var(--line);
+  border: none;
   border-radius: 10px;
   background: #ffffff;
 }
@@ -479,7 +479,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px;
+  gap: 12px;
   margin-top: 28px;
   margin-bottom: 14px;
 }
@@ -487,6 +487,11 @@ body {
 .chart-section-header .chart-section-title {
   margin: 0;
   flex: none;
+  padding-bottom: 0;
+  border-bottom: none;
+  display: flex;
+  align-items: center;
+  min-height: 32px;
 }
 
 .chart-section-title::before {
@@ -516,6 +521,7 @@ body {
   display: flex;
   justify-content: flex-start;
   margin: 0;
+  align-items: center;
 }
 
 .credit-stage-filter .ant-radio-button-wrapper {
@@ -716,6 +722,16 @@ body {
   margin-bottom: 10px;
 }
 
+.risk-table-card {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.risk-table-card .ant-table-wrapper {
+  min-width: 0;
+}
+
 .risk-section {
   margin-bottom: 20px;
   width: 100%;
@@ -822,8 +838,41 @@ body {
 
 .asset-trend-panel-charts {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  position: relative;
+}
+
+.asset-trend-panel-charts > * {
+  min-width: 0;
+}
+
+.asset-trend-panel-charts::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-0.5px);
+  background: var(--line);
+}
+
+.asset-subchart.chart-card {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  padding: 0;
+}
+
+.asset-subchart.chart-card:hover {
+  border: none;
+  box-shadow: none;
+}
+
+.asset-subchart .chart-title {
+  border-bottom: 1px solid var(--line-soft);
+  margin-bottom: 10px;
 }
 
 .asset-link {

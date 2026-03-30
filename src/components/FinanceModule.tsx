@@ -3,7 +3,7 @@ import { Select, Space, Table, Tabs } from 'antd';
 import ReactECharts from 'echarts-for-react';
 import type { ColumnsType } from 'antd/es/table';
 import type { AssetDetail, FinancialMonthly, GlobalFilter } from '../types';
-import { formatAmount, formatPercent } from '../utils/format';
+import { formatAmount, formatPercent, formatWan } from '../utils/format';
 import {
   areaStyleByColor,
   chartAxis,
@@ -65,14 +65,14 @@ const FinanceModule: React.FC<Props> = ({ globalFilter }) => {
   }, [filteredAssetData]);
 
   const metricRows: Array<{ key: string; metric: string; getValue: (row: AssetDetail) => string }> = [
-    { key: 'loanAmount', metric: '放款金额(万元)', getValue: (row) => (row.loanAmount / 1e4).toFixed(2) },
-    { key: 'balance', metric: '在贷余额(万元)', getValue: (row) => (row.balance / 1e4).toFixed(2) },
+    { key: 'loanAmount', metric: '放款金额(万元)', getValue: (row) => formatWan(row.loanAmount) },
+    { key: 'balance', metric: '在贷余额(万元)', getValue: (row) => formatWan(row.balance) },
     { key: 'rateRange', metric: '利率区间', getValue: (row) => row.rateRange },
-    { key: 'actualInterest', metric: '实收息费(万元)', getValue: (row) => (row.actualInterest / 1e4).toFixed(2) },
+    { key: 'actualInterest', metric: '实收息费(万元)', getValue: (row) => formatWan(row.actualInterest) },
     { key: 'annualRiskLoss', metric: '年化风险损失率', getValue: (row) => formatPercent(row.annualRiskLoss) },
     { key: 'techDiscount', metric: '技术服务费折扣率', getValue: (row) => formatPercent(row.techDiscount) },
     { key: 'profitRatio', metric: '分润比例', getValue: (row) => formatPercent(row.profitRatio) },
-    { key: 'profitIncome', metric: '分润收入(万元)', getValue: (row) => (row.profitIncome / 1e4).toFixed(2) },
+    { key: 'profitIncome', metric: '分润收入(万元)', getValue: (row) => formatWan(row.profitIncome) },
     { key: 'takeRate', metric: 'Take Rate', getValue: (row) => formatPercent(row.takeRate) },
   ];
 
@@ -521,12 +521,12 @@ const FinanceModule: React.FC<Props> = ({ globalFilter }) => {
 
   const financeMonthlyColumns: ColumnsType<FinancialMonthly> = [
     { title: '财务月', dataIndex: 'month', key: 'month', width: 90 },
-    { title: '放款金额(万元)', dataIndex: 'loanAmount', key: 'loanAmount', width: 140, render: (v) => (v / 1e4).toFixed(2) },
-    { title: '在贷余额(万元)', dataIndex: 'balance', key: 'balance', width: 140, render: (v) => (v / 1e4).toFixed(2) },
-    { title: '预算余额(万元)', dataIndex: 'budgetBalance', key: 'budgetBalance', width: 140, render: (v) => (v / 1e4).toFixed(2) },
+    { title: '放款金额(万元)', dataIndex: 'loanAmount', key: 'loanAmount', width: 140, render: (v) => formatWan(v) },
+    { title: '在贷余额(万元)', dataIndex: 'balance', key: 'balance', width: 140, render: (v) => formatWan(v) },
+    { title: '预算余额(万元)', dataIndex: 'budgetBalance', key: 'budgetBalance', width: 140, render: (v) => formatWan(v) },
     { title: '余额达成率', dataIndex: 'budgetAchievement', key: 'budgetAchievement', width: 100, render: (v) => formatPercent(v) },
-    { title: '预算收入(万元)', dataIndex: 'budgetIncome', key: 'budgetIncome', width: 140, render: (v) => (v / 1e4).toFixed(2) },
-    { title: '实际收入(万元)', dataIndex: 'actualIncome', key: 'actualIncome', width: 140, render: (v) => (v / 1e4).toFixed(2) },
+    { title: '预算收入(万元)', dataIndex: 'budgetIncome', key: 'budgetIncome', width: 140, render: (v) => formatWan(v) },
+    { title: '实际收入(万元)', dataIndex: 'actualIncome', key: 'actualIncome', width: 140, render: (v) => formatWan(v) },
     {
       title: '收入达成率',
       key: 'incomeAchievement',
@@ -617,13 +617,13 @@ const FinanceModule: React.FC<Props> = ({ globalFilter }) => {
                         >
                           <div className="asset-trend-panel-title">{item.assetName}趋势图</div>
                           <div className="asset-trend-panel-charts">
-                            <div className="chart-card">
+                            <div className="chart-card asset-subchart">
                               <div className="chart-title">
                                 <span>{item.assetName}放款与在贷余额趋势图</span>
                               </div>
                               <ReactECharts option={item.assetLoanBalanceTrendOption} style={{ height: 280 }} />
                             </div>
-                            <div className="chart-card">
+                            <div className="chart-card asset-subchart">
                               <div className="chart-title">
                                 <span>{item.assetName}预分润收入与Take Rate趋势图</span>
                               </div>

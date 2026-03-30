@@ -11,7 +11,7 @@ import {
   chartTooltip,
   buildXAxisLabelDensity,
 } from '../utils/chartTheme';
-import { getBusinessKPIs, getScaleTrendData, getCompletionTrendData, getCreditStageTrendData, getDrawdownTrendData } from '../mock/data';
+import { getBusinessKPIs, getScaleTrendData, getCompletionTrendData, getCreditStageTrendData, getDrawdownTrendData, getApprovalEfficiencyData, getDrawdownTimeData } from '../mock/data';
 
 interface Props {
   globalFilter: GlobalFilter;
@@ -25,13 +25,15 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
   const kpis = useMemo(() => getBusinessKPIs(globalFilter), [globalFilter]);
   const scaleTrend = useMemo(() => getScaleTrendData(timeFilter.type, 30, globalFilter), [timeFilter.type, globalFilter]);
   const completionTrend = useMemo(() => getCompletionTrendData(timeFilter.type, 30, globalFilter), [timeFilter.type, globalFilter]);
+  const approvalEfficiencyTrend = useMemo(() => getApprovalEfficiencyData(timeFilter.type, 30), [timeFilter.type]);
   const creditStageTrend = useMemo(() => getCreditStageTrendData(timeFilter.type, 30, globalFilter), [timeFilter.type, globalFilter]);
   const drawdownTrend = useMemo(() => getDrawdownTrendData(timeFilter.type, 30, globalFilter), [timeFilter.type, globalFilter]);
+  const drawdownTimeTrend = useMemo(() => getDrawdownTimeData(timeFilter.type, 30), [timeFilter.type]);
 
   const scaleMetricKeys = ['newBalance', 'balance', 'loanCount', 'balanceWeightedRate'];
   const activeScaleMetric = scaleMetricKeys.includes(activeKPI) ? activeKPI : 'newBalance';
 
-  const completionMetricKeys = ['scanRegisterCount', 'realNameCompletedCount', 'completeCount'];
+  const completionMetricKeys = ['scanRegisterCount', 'completeCount', 'completeRate'];
   const activeCompletionMetric = completionMetricKeys.includes(activeKPI) ? activeKPI : 'completeCount';
 
   const creditMetricKeys = [
@@ -56,7 +58,16 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       ? activeKPI
       : visibleCreditMetricKeys[0];
 
-  const drawdownMetricKeys = ['drawdownInitiatedCount', 'drawdownSuccessCount', 'drawdownAmount', 'drawdownWeightedRate'];
+  const drawdownMetricKeys = [
+    'drawdownInitiatedCount',
+    'drawdownSuccessCount',
+    'drawdownAmount',
+    'drawdownWeightedRate',
+    'drawdownT1Rate',
+    'drawdownT3Rate',
+    'drawdownT7Rate',
+    'drawdownT15Rate',
+  ];
   const activeDrawdownMetric = drawdownMetricKeys.includes(activeKPI) ? activeKPI : 'drawdownInitiatedCount';
   const formatAbsoluteDeltaByUnit = (value: number, unit: KPIItem['unit']) => {
     const absValue = Math.abs(value);
@@ -84,10 +95,11 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
     balance: '剩余未还本金总和',
     loanCount: '当期余额为正人数',
     balanceWeightedRate: '余额加权利率=Σ(在贷余额×执行利率)/Σ在贷余额',
+    coreCompleteRate: '完件率=完件人数/扫码注册人数',
 
     scanRegisterCount: '统计期内扫码注册成功人数（按客户去重）',
-    realNameCompletedCount: '完成实名OCR认证的人数，去重',
     completeCount: '授信申请订单提交（提交审批）人数',
+    completeRate: '完件率=完件人数/扫码注册人数',
 
     stage1CreditSuccessCount: '1段点击额度确认后，终审通过人数，去重',
     stage1CreditSuccessAmount: '1段点击额度确认后，终审通过的授信金额，不去重',
@@ -103,6 +115,10 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
     drawdownSuccessCount: '成功动支的人数，去重',
     drawdownAmount: '放款成功的总金额',
     drawdownWeightedRate: '∑（单笔动支金额*动支利率）/动支总金额',
+    drawdownT1Rate: 'T1动支率=T+1日内动支人数/授信成功人数',
+    drawdownT3Rate: 'T3动支率=T+3日内动支人数/授信成功人数',
+    drawdownT7Rate: 'T7动支率=T+7日内动支人数/授信成功人数',
+    drawdownT15Rate: 'T15动支率=T+15日内动支人数/授信成功人数',
   };
 
   const getMetricFormula = (metricKey: string) => metricFormulaMap[metricKey] ?? '统计口径待补充';
@@ -123,17 +139,32 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
     </span>
   );
 
-  const renderKpiValue = (kpi: KPIItem) => {
-    if (kpi.key === 'completeCount' && kpi.unit === 'count') {
-      return (
-        <div className="kpi-value-row">
-          <span className="kpi-value-main">{kpi.value.toLocaleString()}</span>
-          <span className="kpi-value-unit">(人)</span>
-        </div>
-      );
-    }
+  const getKpiNameWithUnit = (kpi: KPIItem) => {
+    if (kpi.unit === 'amount') return `${kpi.name}（万元）`;
+    if (kpi.unit === 'count') return `${kpi.name}（人）`;
+    return kpi.name;
+  };
 
-    return <div className="kpi-value">{formatKPI(kpi.value, kpi.unit)}</div>;
+  const formatKpiDisplayValue = (kpi: KPIItem) => {
+    if (kpi.unit === 'amount') {
+      return (kpi.value / 1e4).toLocaleString('zh-CN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+    if (kpi.unit === 'percent') {
+      return (kpi.value * 100).toFixed(2);
+    }
+    return kpi.value.toLocaleString('zh-CN');
+  };
+
+  const renderKpiValue = (kpi: KPIItem) => {
+    return (
+      <div className="kpi-value-row">
+        <span className="kpi-value-main">{formatKpiDisplayValue(kpi)}</span>
+        {kpi.unit === 'percent' ? <span className="kpi-value-unit">%</span> : null}
+      </div>
+    );
   };
 
   const renderKpiCard = (kpi: KPIItem) => {
@@ -144,7 +175,7 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
         className={`kpi-card ${isActive ? 'active' : ''}`}
         onClick={() => setActiveKPI(kpi.key)}
       >
-        <div className="kpi-name">{kpi.name}</div>
+        <div className="kpi-name">{getKpiNameWithUnit(kpi)}</div>
         {renderKpiValue(kpi)}
         <div className="kpi-meta-row">
           <div className="kpi-meta-line">
@@ -394,14 +425,6 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       data: completionTrend.scanRegisterCount,
       formatter: (v) => `${v}`,
     },
-    realNameCompletedCount: {
-      title: '实名完成人数趋势',
-      yAxisName: '人数(万人)',
-      type: 'line',
-      color: chartPalette.green600,
-      data: completionTrend.realNameCompletedCount,
-      formatter: (v) => `${v}`,
-    },
     completeCount: {
       title: '完件人数趋势',
       yAxisName: '人数(万人)',
@@ -409,6 +432,14 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       color: chartPalette.green400,
       data: completionTrend.completeCount,
       formatter: (v) => `${v}`,
+    },
+    completeRate: {
+      title: '完件率趋势',
+      yAxisName: '完件率(%)',
+      type: 'line',
+      color: chartPalette.green600,
+      data: approvalEfficiencyTrend.completeRate,
+      formatter: (v) => `${(v * 100).toFixed(2)}%`,
     },
   };
   const selectedCompletionMetric = completionMetricConfig[activeCompletionMetric];
@@ -614,6 +645,38 @@ const BusinessModule: React.FC<Props> = ({ globalFilter }) => {
       type: 'line',
       color: chartPalette.green900,
       data: drawdownTrend.rate,
+      formatter: (v) => `${(v * 100).toFixed(2)}%`,
+    },
+    drawdownT1Rate: {
+      title: 'T1动支率趋势',
+      yAxisName: '动支率(%)',
+      type: 'line',
+      color: chartPalette.green700,
+      data: drawdownTimeTrend.t0,
+      formatter: (v) => `${(v * 100).toFixed(2)}%`,
+    },
+    drawdownT3Rate: {
+      title: 'T3动支率趋势',
+      yAxisName: '动支率(%)',
+      type: 'line',
+      color: chartPalette.green600,
+      data: drawdownTimeTrend.t3,
+      formatter: (v) => `${(v * 100).toFixed(2)}%`,
+    },
+    drawdownT7Rate: {
+      title: 'T7动支率趋势',
+      yAxisName: '动支率(%)',
+      type: 'line',
+      color: chartPalette.green400,
+      data: drawdownTimeTrend.t7,
+      formatter: (v) => `${(v * 100).toFixed(2)}%`,
+    },
+    drawdownT15Rate: {
+      title: 'T15动支率趋势',
+      yAxisName: '动支率(%)',
+      type: 'line',
+      color: chartPalette.mint500,
+      data: drawdownTimeTrend.t30.map((value, index) => Math.max(value - (drawdownTimeTrend.notDrawn[index] * 0.04), 0)),
       formatter: (v) => `${(v * 100).toFixed(2)}%`,
     },
   };

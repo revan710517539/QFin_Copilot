@@ -3,9 +3,16 @@
  */
 export function formatAmount(value: number): string {
   return (value / 1e4).toLocaleString('zh-CN', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }) + '万元';
+}
+
+export function formatWan(value: number, fractionDigits: number = 2): string {
+  return (value / 1e4).toLocaleString('zh-CN', {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  });
 }
 
 /**
