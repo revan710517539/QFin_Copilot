@@ -42,6 +42,7 @@ const assetMetricRows: Array<{ key: string; metric: string; getValue: (row: Asse
   { key: 'annualRiskLoss', metric: '年化风险损失率', getValue: (row) => formatPercent(row.annualRiskLoss) },
   { key: 'techDiscount', metric: '技术服务费折扣率', getValue: (row) => formatPercent(row.techDiscount) },
   { key: 'profitRatio', metric: '分润比例', getValue: (row) => formatPercent(row.profitRatio) },
+  { key: 'nominalDuration', metric: '名义久期(月)', getValue: (row) => row.nominalDuration.toFixed(1) },
 ];
 
 const assetCellMeta: Partial<Record<string, { pricing: string; discount: string }>> = {
@@ -405,16 +406,12 @@ const FinanceModule: React.FC<Props> = ({ globalFilter }) => {
       formatter: (params: any) => {
         let s = params[0].axisValue + '<br/>';
         params.forEach((p: any) => {
-          if (p.seriesName === 'Take Rate') {
-            s += `${p.marker} ${p.seriesName}: ${(p.value * 100).toFixed(2)}%<br/>`;
-          } else {
-            s += `${p.marker} ${p.seriesName}: ${(p.value / 1e4).toFixed(0)}万元<br/>`;
-          }
+          s += `${p.marker} ${p.seriesName}: ${(p.value / 1e4).toFixed(0)}万元<br/>`;
         });
         return s;
       },
     },
-    legend: { data: ['预算收入', '实际收入', 'Take Rate'], bottom: 0, ...chartLegend },
+    legend: { data: ['预算收入', '实际收入'], bottom: 0, ...chartLegend },
     grid: { left: 60, right: 60, top: 40, bottom: 40 },
     xAxis: {
       type: 'category' as const,
@@ -430,15 +427,6 @@ const FinanceModule: React.FC<Props> = ({ globalFilter }) => {
         alignTicks: true,
         nameGap: 14,
         axisLabel: { formatter: (v: number) => (v / 1e4).toFixed(0) },
-        ...chartAxis,
-      },
-      {
-        type: 'value' as const,
-        name: 'Take Rate',
-        position: 'right' as const,
-        alignTicks: true,
-        nameGap: 14,
-        axisLabel: { formatter: (v: number) => (v * 100).toFixed(1) + '%' },
         ...chartAxis,
       },
     ],
@@ -458,19 +446,6 @@ const FinanceModule: React.FC<Props> = ({ globalFilter }) => {
         barWidth: 16,
         data: monthlyData.map((d) => d.actualIncome),
         itemStyle: { color: chartPalette.green600, borderRadius: [5, 5, 0, 0] },
-      },
-      {
-        name: 'Take Rate',
-        type: 'line',
-        yAxisIndex: 1,
-        data: monthlyData.map((d) => d.takeRate),
-        smooth: true,
-        lineStyle: { width: 3 },
-        itemStyle: { color: chartPalette.mint500 },
-        areaStyle: areaStyleByColor(chartPalette.mint500),
-        showSymbol: true,
-        symbol: 'circle',
-        symbolSize: 6,
       },
     ],
   };
@@ -530,6 +505,61 @@ const FinanceModule: React.FC<Props> = ({ globalFilter }) => {
     ],
   };
 
+  const takeRateTrendOption = {
+    color: chartSeries,
+    tooltip: {
+      trigger: 'axis' as const,
+      axisPointer: { type: 'line' as const },
+      ...chartTooltip,
+      formatter: (params: any) => {
+        let s = params[0].axisValue + '<br/>';
+        params.forEach((p: any) => {
+          s += `${p.marker} ${p.seriesName}: ${(p.value * 100).toFixed(2)}%<br/>`;
+        });
+        return s;
+      },
+    },
+    legend: { data: ['预期Take Rate', '实际Take Rate'], bottom: 0, ...chartLegend },
+    grid: { left: 60, right: 20, top: 40, bottom: 40 },
+    xAxis: {
+      type: 'category' as const,
+      data: monthlyData.map((d) => d.month),
+      axisLabel: buildXAxisLabelDensity(monthlyData.length),
+      ...chartAxis,
+    },
+    yAxis: {
+      type: 'value' as const,
+      name: 'Take Rate',
+      axisLabel: { formatter: (v: number) => (v * 100).toFixed(1) + '%' },
+      ...chartAxis,
+    },
+    series: [
+      {
+        name: '预期Take Rate',
+        type: 'line',
+        data: monthlyData.map((d) => d.expectedTakeRate),
+        smooth: true,
+        showSymbol: true,
+        symbol: 'circle',
+        symbolSize: 6,
+        lineStyle: { width: 2, type: 'dashed' as const, color: chartPalette.neutral500, opacity: 0.95 },
+        itemStyle: { color: chartPalette.neutral500 },
+      },
+      {
+        name: '实际Take Rate',
+        type: 'line',
+        data: monthlyData.map((d) => d.actualTakeRate),
+        smooth: true,
+        showSymbol: true,
+        symbol: 'circle',
+        symbolSize: 7,
+        lineStyle: { width: 3 },
+        itemStyle: { color: chartPalette.green700 },
+        areaStyle: areaStyleByColor(chartPalette.green600),
+      },
+    ],
+  };
+
   const financeMonthlyColumns: ColumnsType<FinancialMonthly> = [
     { title: '财务月', dataIndex: 'month', key: 'month', width: 90 },
     { title: '放款金额(万元)', dataIndex: 'loanAmount', key: 'loanAmount', width: 140, render: (v) => formatWan(v) },
@@ -544,7 +574,8 @@ const FinanceModule: React.FC<Props> = ({ globalFilter }) => {
       width: 100,
       render: (_, row) => formatPercent(row.actualIncome / row.budgetIncome),
     },
-    { title: 'Take Rate', dataIndex: 'takeRate', key: 'takeRate', width: 100, render: (v) => formatPercent(v) },
+    { title: '预期Take Rate', dataIndex: 'expectedTakeRate', key: 'expectedTakeRate', width: 120, render: (v) => formatPercent(v) },
+    { title: '实际Take Rate', dataIndex: 'actualTakeRate', key: 'actualTakeRate', width: 120, render: (v) => formatPercent(v) },
   ];
 
   return (
@@ -563,18 +594,24 @@ const FinanceModule: React.FC<Props> = ({ globalFilter }) => {
             label: '总体财务',
             children: (
               <>
-                <div className="finance-top-charts">
-                  <div className="chart-card">
-                    <div className="chart-title">月度放款与余额</div>
-                    <ReactECharts option={loanBalanceOption} style={{ height: 320 }} />
-                  </div>
-                  <div className="chart-card">
-                    <div className="chart-title">收入达成</div>
-                    <ReactECharts option={incomeOption} style={{ height: 320 }} />
-                  </div>
-                  <div className="chart-card">
-                    <div className="chart-title">收入YTD趋势</div>
-                    <ReactECharts option={incomeYtdOption} style={{ height: 320 }} />
+                <div className="finance-top-scroll-wrap">
+                  <div className="finance-top-scroll">
+                    <div className="chart-card">
+                      <div className="chart-title">月度放款与余额</div>
+                      <ReactECharts option={loanBalanceOption} style={{ height: 320 }} />
+                    </div>
+                    <div className="chart-card">
+                      <div className="chart-title">收入达成</div>
+                      <ReactECharts option={incomeOption} style={{ height: 320 }} />
+                    </div>
+                    <div className="chart-card">
+                      <div className="chart-title">预期与实际Take Rate</div>
+                      <ReactECharts option={takeRateTrendOption} style={{ height: 320 }} />
+                    </div>
+                    <div className="chart-card">
+                      <div className="chart-title">收入YTD趋势</div>
+                      <ReactECharts option={incomeYtdOption} style={{ height: 320 }} />
+                    </div>
                   </div>
                 </div>
 
@@ -588,7 +625,7 @@ const FinanceModule: React.FC<Props> = ({ globalFilter }) => {
                       pagination={false}
                       size="small"
                       bordered
-                      scroll={{ x: 1100 }}
+                      scroll={{ x: 1300 }}
                     />
                   </div>
                 </div>

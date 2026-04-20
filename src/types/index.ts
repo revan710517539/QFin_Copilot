@@ -52,6 +52,7 @@ export interface RiskDetailRow {
   balance: number;
   loanCount: number;
   avgCredit: number;
+  nominalDuration: number;
   avgPricing: number;
   dpd3Principal: number;
   dpd3Rate: number;
@@ -72,6 +73,7 @@ export interface RiskDrilldownRow {
   balance: number;
   loanCount: number;
   avgCredit: number;
+  nominalDuration: number;
   avgPricing: number;
   dpd3Principal: number;
   dpd3Rate: number;
@@ -99,6 +101,8 @@ export interface FinancialMonthly {
   budgetAchievement: number;
   budgetIncome: number;
   actualIncome: number;
+  expectedTakeRate: number;
+  actualTakeRate: number;
   takeRate: number;
 }
 
@@ -107,6 +111,7 @@ export interface AssetDetail {
   assetName: string;
   loanAmount: number;
   balance: number;
+  nominalDuration: number;
   rateRange: string;
   actualInterest: number;
   annualRiskLoss: number;

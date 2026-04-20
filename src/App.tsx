@@ -17,6 +17,15 @@ const App: React.FC = () => {
   });
   const [activeTab, setActiveTab] = useState('business');
 
+  const financeGlobalFilter = useMemo(
+    () => ({
+      ...globalFilter,
+      secondaryInstitutions: [],
+      tertiaryInstitutions: [],
+    }),
+    [globalFilter]
+  );
+
   const bankOptions = useMemo(
     () => institutionCascade.map((item) => ({ label: item.bank, value: item.bankValue })),
     []
@@ -137,7 +146,7 @@ const App: React.FC = () => {
           财务数据
         </span>
       ),
-      children: <FinanceModule globalFilter={globalFilter} />,
+      children: <FinanceModule globalFilter={financeGlobalFilter} />,
     },
   ];
 
@@ -206,27 +215,31 @@ const App: React.FC = () => {
             placeholder="银行维度"
             style={{ minWidth: 220 }}
           />
-          <Select
-            options={secondaryOptions}
-            value={globalFilter.secondaryInstitutions}
-            onChange={handleSecondaryChange}
-            mode="multiple"
-            maxTagCount="responsive"
-            placeholder="二级机构"
-            style={{ minWidth: 220 }}
-            disabled={globalFilter.banks.length === 0}
-            allowClear
-          />
-          <Select
-            options={tertiaryOptions}
-            value={globalFilter.tertiaryInstitutions}
-            onChange={handleTertiaryChange}
-            mode="multiple"
-            maxTagCount="responsive"
-            placeholder="三级机构"
-            style={{ minWidth: 220 }}
-            allowClear
-          />
+          {activeTab !== 'finance' ? (
+            <>
+              <Select
+                options={secondaryOptions}
+                value={globalFilter.secondaryInstitutions}
+                onChange={handleSecondaryChange}
+                mode="multiple"
+                maxTagCount="responsive"
+                placeholder="二级机构"
+                style={{ minWidth: 220 }}
+                disabled={globalFilter.banks.length === 0}
+                allowClear
+              />
+              <Select
+                options={tertiaryOptions}
+                value={globalFilter.tertiaryInstitutions}
+                onChange={handleTertiaryChange}
+                mode="multiple"
+                maxTagCount="responsive"
+                placeholder="三级机构"
+                style={{ minWidth: 220 }}
+                allowClear
+              />
+            </>
+          ) : null}
         </div>
         <div className="header-right">
           <BankOutlined style={{ fontSize: 16 }} />

@@ -591,6 +591,7 @@ export function getRiskDetailData(filter?: GlobalFilter, monthType: 'natural' | 
     const balance = randomInRange(2.5, 3.5) * 1e8 * scale * monthTypeFactor;
     const loanCount = Math.round(randomInRange(3000, 5000) * scale * monthTypeFactor);
     const avgCredit = randomInRange(40000, 60000);
+    const nominalDuration = randomInRange(8, 24);
     const avgPricing = randomInRange(0.1, 0.2);
 
     const dpd90Rate = randomInRange(0.002, 0.015);
@@ -611,6 +612,7 @@ export function getRiskDetailData(filter?: GlobalFilter, monthType: 'natural' | 
       balance,
       loanCount,
       avgCredit,
+      nominalDuration,
       avgPricing,
       dpd3Principal,
       dpd3Rate,
@@ -653,6 +655,7 @@ export function getRiskDrilldownData(
     const balance = loanAmount * randomInRange(1.12, 1.36);
     const loanCount = Math.round(randomInRange(600, 2400) * bucketFactor * monthFactor * monthTypeFactor);
     const avgCredit = Math.max(80000, loanAmount / Math.max(loanCount, 1));
+    const nominalDuration = randomInRange(7, 26);
     const avgPricing = randomInRange(0.1, 0.24) * (1 + index * 0.08);
     const dpd3Rate = randomInRange(0.012, 0.045) * (1 + index * 0.16);
     const dpd30Rate = randomInRange(0.008, 0.03) * (1 + index * 0.18);
@@ -672,6 +675,7 @@ export function getRiskDrilldownData(
       balance,
       loanCount,
       avgCredit,
+      nominalDuration,
       avgPricing,
       dpd3Principal,
       dpd3Rate,
@@ -758,6 +762,8 @@ export function getFinancialMonthlyData(filter?: GlobalFilter): FinancialMonthly
     const budgetBal = bal * randomInRange(1.02, 1.1);
     const budgetInc = budgetIncomeSeries[i];
     const actualInc = budgetInc * clamp(0.86 + i * 0.015 + randomInRange(-0.04, 0.04), 0.75, 1.18);
+    const expectedTakeRate = clamp((budgetInc * 12) / budgetBal, 0.005, 0.08);
+    const actualTakeRate = clamp((actualInc * 12) / bal, 0.005, 0.08);
     return {
       month,
       loanAmount: loanAmt,
@@ -766,7 +772,9 @@ export function getFinancialMonthlyData(filter?: GlobalFilter): FinancialMonthly
       budgetAchievement: bal / budgetBal,
       budgetIncome: budgetInc,
       actualIncome: actualInc,
-      takeRate: (actualInc * 12) / bal,
+      expectedTakeRate,
+      actualTakeRate,
+      takeRate: actualTakeRate,
     };
   });
 }
@@ -873,6 +881,7 @@ export function getAssetDetailData(filter?: GlobalFilter): AssetDetail[] {
         assetName: asset,
         loanAmount: loanSeries[rowIndex],
         balance: balanceSeries[rowIndex],
+        nominalDuration: randomInRange(9, 30),
         rateRange: ['8-12%', '12-15%', '15-18%', '18-24%'][Math.floor(Math.random() * 4)],
         actualInterest: actualInterestSeries[rowIndex],
         annualRiskLoss: annualRiskLossSeries[rowIndex],
